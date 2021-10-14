@@ -4,6 +4,8 @@
     using DSharpPlus;
     using DSharpPlus.CommandsNext;
     using System;
+    using System.Threading.Tasks;
+
     public class Bot
     {
         private DiscordClient _client;
@@ -23,6 +25,14 @@
             var cfg = new BotConfigurator();
             cfg.ConfigureServices(ref _services);
             cfg.ConfigureCommands(_client, ref _commands, _services);
+            cfg.ConfigureExtensions(_client);
+        }
+
+        public async Task Start()
+        {
+            await _client.ConnectAsync();
+
+            await Task.Delay(-1);
         }
     }
 }

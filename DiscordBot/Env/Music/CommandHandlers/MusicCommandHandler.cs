@@ -2,6 +2,7 @@
 {
     using DiscordBot.Env.Music.Attributes;
     using DiscordBot.Env.Music.Enums;
+    using DiscordBot.Env.Music.Services.Interfaces;
     using DSharpPlus.CommandsNext;
     using System;
     using System.Linq;
@@ -28,9 +29,14 @@
                 {
                     return;
                 }
-                else if(GetCommandType(cmd) == CommandType.Join)
+                
+                if(GetCommandType(cmd) == CommandType.Join)
                 {
                     await HandleJoinCommand(ctx);
+                }
+                else if(GetCommandType(cmd) == CommandType.Leave)
+                {
+                    await HandleLeaveCommand(ctx);
                 }
             };
         }
@@ -49,7 +55,14 @@
 
         private async Task HandleJoinCommand(CommandContext ctx)
         {
+            var connectService = _services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService;
+            await connectService.EstablishConnection(ctx, _services);
+        }
 
+        private async Task HandleLeaveCommand(CommandContext ctx)
+        {
+            var disconnectService = _services.GetService(typeof(IVoiceDisconnectService)) as IVoiceDisconnectService;
+            await disconnectService.CloseConnection(ctx, _services);
         }
     }
 }

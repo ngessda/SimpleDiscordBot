@@ -1,12 +1,10 @@
-﻿using System;
-
-namespace DiscordBot
+﻿namespace DiscordBot
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            new Bot("YOUR TOKEN").Start().GetAwaiter().GetResult() ;
         }
     }
 }

@@ -21,5 +21,10 @@
         {
             services = new ServiceInstaller().SetupAndGetServices();
         }
+
+        public void ConfigureExtensions(DiscordClient client)
+        {
+            new ExtensionInstaller().SetupExtensions(client);
+        }
     }
 }
