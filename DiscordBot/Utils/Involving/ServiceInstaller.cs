@@ -34,12 +34,14 @@
 
         private void FillCollection(ServiceCollection collection)
         {
-            var typeList = _baseAssembly.GetTypes().Where(t => t.Namespace.EndsWith("Services.Interfaces")).ToList();
-            var implList = _baseAssembly.GetTypes().Where(t => t.Namespace.EndsWith("Services")).ToList();
-            if(typeList.Count != implList.Count)
-            {
-                throw new ApplicationException("Количество интерфейсов и их реализаций не совпадает");
-            }
+            var typeList = _baseAssembly.GetTypes()
+                .Where(t => t.Namespace.EndsWith("Services.Interfaces")
+                        && t.IsInterface)
+                .ToList();
+            var implList = _baseAssembly.GetTypes()
+                .Where(t => t.Namespace.EndsWith("Services") 
+                        && t.IsClass)
+                .ToList();
             for(int i = 0; i < typeList.Count; i++)
             {
                 for(int j = 0; j < implList.Count; j++)

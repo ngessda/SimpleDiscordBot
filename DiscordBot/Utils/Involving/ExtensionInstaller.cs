@@ -2,6 +2,7 @@
 {
     using DiscordBot.Utils.Involving.Interfaces;
     using DSharpPlus;
+    using System;
     using System.Linq;
     using System.Reflection;
 
@@ -21,10 +22,13 @@
 
         public void SetupExtensions(DiscordClient client)
         {
-            var extList = _baseAssembly.GetTypes().Where(t => t.Namespace.EndsWith("Extensions"));
-            foreach(var ext in extList)
+            var extList = _baseAssembly.GetTypes()
+                .Where(t => t.Namespace.EndsWith("Extensions") && t.IsClass)
+                .ToList();
+            foreach(var extType in extList)
             {
-                (ext as IExtension).Setup(client);
+                var ext = Activator.CreateInstance(extType) as IExtension;
+                ext.Setup(client);
             }
         }
     }

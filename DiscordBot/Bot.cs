@@ -1,5 +1,6 @@
 ﻿namespace DiscordBot
 {
+    using DiscordBot.Env.Music.CommandHandlers;
     using DiscordBot.Utils.Involving;
     using DSharpPlus;
     using DSharpPlus.CommandsNext;
@@ -26,6 +27,7 @@
             cfg.ConfigureServices(ref _services);
             cfg.ConfigureCommands(_client, ref _commands, _services);
             cfg.ConfigureExtensions(_client);
+            new MusicCommandHandler(_commands);
         }
 
         public async Task Start()

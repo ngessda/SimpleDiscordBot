@@ -6,7 +6,6 @@
     using DSharpPlus.CommandsNext;
     using System;
     using System.Linq;
-    using System.Reflection;
     using System.Threading.Tasks;
 
     public class MusicCommandHandler
@@ -43,8 +42,9 @@
 
         private CommandType GetCommandType(Command command)
         {
-            var attr = Attribute
-                .GetCustomAttribute(command.GetType().GetTypeInfo(), typeof(MusicCommandAttribute)) as MusicCommandAttribute;
+            var attr = command.CustomAttributes
+                .Where(a => a is MusicCommandAttribute)
+                .First() as MusicCommandAttribute;
             return attr.CommandType;
         }
 

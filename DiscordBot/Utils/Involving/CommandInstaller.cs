@@ -50,7 +50,7 @@
         private void RegisterCommands(CommandsNextExtension commands)
         {
             var commandsList = _baseAssembly.GetTypes()
-                .Where(t => t.Namespace.EndsWith("Commands") && !t.Name.StartsWith("<"))
+                .Where(t => t.Namespace.EndsWith("Commands") && !t.Name.StartsWith("<") && t.Name.EndsWith("Commands"))
                 .ToList();
             foreach(var c in commandsList)
             {

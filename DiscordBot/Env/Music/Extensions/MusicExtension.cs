@@ -17,7 +17,7 @@
             };
             var config = new LavalinkConfiguration
             {
-                Password = "kamil400",
+                Password = "youshallnotpass",
                 RestEndpoint = endpoint,
                 SocketEndpoint = endpoint
             };

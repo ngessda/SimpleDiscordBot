@@ -4,7 +4,10 @@
     {
         static void Main(string[] args)
         {
-            new Bot("YOUR TOKEN").Start().GetAwaiter().GetResult() ;
+            new Bot("YOUR TOKEN")
+                .Start()
+                .GetAwaiter()
+                .GetResult();
         }
     }
 }
