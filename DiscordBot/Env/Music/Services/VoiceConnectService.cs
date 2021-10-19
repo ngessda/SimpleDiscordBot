@@ -38,5 +38,30 @@
             }
             return connection;
         }
+
+        public async Task<LavalinkGuildConnection> GetGuildConnection(CommandContext ctx, IServiceProvider services)
+        {
+            var embed = services.GetService(typeof(IEmbedService)) as IEmbedService;
+            var textChannel = ctx.Channel;
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values?.First();
+            if (node == null)
+            {
+                await textChannel.SendMessageAsync(
+                    embed.CreateEmbed(EmbedType.NoServerConnection)
+                    );
+                return null;
+            }
+            var voiceChannel = ctx.Member.VoiceState?.Channel;
+            if (voiceChannel == null)
+            {
+                await textChannel.SendMessageAsync(
+                    embed.CreateEmbed(EmbedType.NotInVoiceChannel)
+                    );
+                return null;
+            }
+            var connection = node.GetGuildConnection(ctx.Guild);
+            return connection;
+        }
     }
 }

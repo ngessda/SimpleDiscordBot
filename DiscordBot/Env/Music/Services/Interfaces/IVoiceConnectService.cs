@@ -8,5 +8,6 @@
     public interface IVoiceConnectService
     {
         public Task<LavalinkGuildConnection> EstablishConnection(CommandContext ctx, IServiceProvider services);
+        public Task<LavalinkGuildConnection> GetGuildConnection(CommandContext ctx, IServiceProvider services);
     }
 }

@@ -32,7 +32,10 @@
                 return;
             }
             var connection = node.GetGuildConnection(voiceChannel.Guild);
-            await connection?.DisconnectAsync();
+            if(connection != null)
+            {
+                await connection.DisconnectAsync();
+            }
         }
     }
 }
