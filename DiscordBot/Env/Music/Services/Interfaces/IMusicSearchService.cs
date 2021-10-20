@@ -5,6 +5,6 @@
 
     public interface IMusicSearchService
     {
-        public Task<LavalinkLoadResult> GetTracks(LavalinkGuildConnection connection, string query);
+        public Task<LavalinkLoadResult> GetQueryResult(LavalinkGuildConnection conn, string query);
     }
 }
