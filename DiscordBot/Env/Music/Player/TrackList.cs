@@ -40,7 +40,7 @@
 
         public bool HasPrevious()
         {
-            return Position - 1 > 0;
+            return Position - 1 > -1;
         }
 
         public void Clear()

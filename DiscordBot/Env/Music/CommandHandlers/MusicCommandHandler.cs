@@ -7,6 +7,7 @@
     using DiscordBot.Env.Music.Services.Interfaces;
     using DSharpPlus.CommandsNext;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -28,12 +29,14 @@
             {
                 var cmd = e.Command;
                 var ctx = e.Context;
+                var args = ctx.RawArguments;
+                var type = GetCommandType(cmd);
                 if (!InMusicEnvironment(cmd))
                 {
                     return;
                 }
 
-                var type = GetCommandType(cmd);
+                if(type == CommandType.Join)
 
                 if(type == CommandType.Join)
                 {
@@ -43,9 +46,25 @@
                 {
                     await HandleLeaveCommand(ctx);
                 }
-                else if(type == CommandType.Play)
+                else if (type == CommandType.Play)
                 {
-                    await HandlePlayCommand(ctx, cmd);
+                    await HandlePlayCommand(ctx, args);
+                }
+                else if(type == CommandType.Pause)
+                {
+                    await HandlePauseCommand(ctx);
+                }
+                else if(type == CommandType.Stop)
+                {
+                    await HandleStopCommand(ctx);
+                }
+                else if(type == CommandType.Next)
+                {
+                    await HandleNextCommand(ctx);
+                }
+                else if(type == CommandType.Back)
+                {
+                    await HandleBackCommand(ctx);
                 }
             };
         }
@@ -75,13 +94,37 @@
             await disconnectService.CloseConnection(ctx, _services);
         }
 
-        private async Task HandlePlayCommand(CommandContext ctx, Command cmd)
+        private async Task HandlePlayCommand(CommandContext ctx, IReadOnlyList<string> args)
         {
-            var query = cmd.Overloads?.First().Arguments?.First().DefaultValue as string;
-            if(query != null)
+            var query = args?.First();
+            if(query == null)
+            {
+                await _player.AppendPayload(new PlayPayload(ctx));
+            }
+            else
             {
                 await _player.AppendPayload(new QueryPayload(ctx, query));
             }
+        }
+
+        private async Task HandlePauseCommand(CommandContext ctx)
+        {
+            await _player.AppendPayload(new PausePayload(ctx));
+        }
+
+        private async Task HandleNextCommand(CommandContext ctx)
+        {
+            await _player.AppendPayload(new NextPayload(ctx));
+        }
+
+        private async Task HandleBackCommand(CommandContext ctx)
+        {
+            await _player.AppendPayload(new BackPayload(ctx));
+        }
+
+        private async Task HandleStopCommand(CommandContext ctx)
+        {
+            await _player.AppendPayload(new StopPayload(ctx));
         }
     }
 }

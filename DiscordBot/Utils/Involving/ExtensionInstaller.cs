@@ -23,7 +23,7 @@
         public void SetupExtensions(DiscordClient client)
         {
             var extList = _baseAssembly.GetTypes()
-                .Where(t => t.Namespace.EndsWith("Extensions") && t.IsClass)
+                .Where(t => t.Namespace.EndsWith("Extensions") && t.IsClass && t.Name.EndsWith("Extension"))
                 .ToList();
             foreach(var extType in extList)
             {

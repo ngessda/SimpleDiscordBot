@@ -33,7 +33,7 @@
                 await msg.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
             }
             var reaction = await ctx.Client.GetInteractivity()
-                .WaitForReactionAsync(x => x.Message == msg, ctx.Member, null);
+                .WaitForReactionAsync(x => x.Message == msg, ctx.Member);
             await msg.DeleteAsync();
             if (reaction.TimedOut)
             {

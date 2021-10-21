@@ -1,10 +1,12 @@
 ﻿namespace DiscordBot.Env.Music.Player
 {
     using DiscordBot.Env.Music.Enums;
+    using DiscordBot.Env.Music.Player.Enums;
     using DiscordBot.Env.Music.Player.Payloads;
     using DiscordBot.Env.Music.Player.Payloads.Enums;
     using DiscordBot.Env.Music.Services.Interfaces;
     using DSharpPlus.CommandsNext;
+    using DSharpPlus.Entities;
     using DSharpPlus.Lavalink;
     using System;
     using System.Collections.Generic;
@@ -19,6 +21,7 @@
         private IServiceProvider _services;
         private TrackList _tracks = new TrackList();
         private Queue<Payload> _payloads = new Queue<Payload>();
+        private ShouldPlay _shouldPlay = new ShouldPlay();
         public PlayerState State { get; private set; } = PlayerState.None;
 
         public MusicPlayer(IServiceProvider services)
@@ -50,7 +53,8 @@
                 var conn = await connService.GetGuildConnection(payload.Context, _services);
                 if(conn == null)
                 {
-                    await connService.EstablishConnection(payload.Context, _services);
+                    conn = await connService.EstablishConnection(payload.Context, _services);
+                    HandleConnectionEvents(payload.Context, conn);
                 }
                 if(payload.Type == PayloadType.Query)
                 {
@@ -60,7 +64,62 @@
                 {
                     await HandlePlayPayload(payload as PlayPayload);
                 }
+                else if(payload.Type == PayloadType.Pause)
+                {
+                    await HandlePausePayload(payload as PausePayload);
+                }
+                else if(payload.Type == PayloadType.Stop)
+                {
+                    await HandleStopPayload(payload as StopPayload);
+                }
+                else if(payload.Type == PayloadType.Next)
+                {
+                    await HandleNextPayload(payload as NextPayload);
+                }
+                else if(payload.Type == PayloadType.Back)
+                {
+                    await HandleBackPayload(payload as BackPayload);
+                }
             }
+        }
+
+        private void HandleConnectionEvents(CommandContext ctx, LavalinkGuildConnection connection)
+        {
+            DiscordMessage msg;
+            connection.PlaybackStarted += async (s, e) =>
+            {
+                State = PlayerState.Playing;
+                msg = await ctx.Channel.SendMessageAsync(
+                (_services.GetService(typeof(IEmbedService)) as IEmbedService)
+                .CreateNowPlayingEmbed(_tracks.CurrentTrack)
+                );
+                // нужен сервис для обработки сообщений
+            };
+            connection.PlaybackFinished += async (k, t) =>
+            {
+                State = PlayerState.None;
+                if (_shouldPlay.Result)
+                {
+                    LavalinkTrack track;
+                    lock (_tracks)
+                    {
+                        if (!_tracks.HasNext())
+                        {
+                            return;
+                        }
+                        track = _tracks.GetNextTrack();
+                    }
+                    if (track == null)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        await PlayTrack(track, connection);
+                    }
+                }
+                _shouldPlay.Reset();
+            };
         }
 
         private async Task HandleQueryPayload(QueryPayload payload)
@@ -90,6 +149,9 @@
             {
                 _tracks.Add(track);
             }
+            await payload.Context.Channel.SendMessageAsync(
+                embed.CreateAddedInQueueEmbed(payload.Context, track)
+                );
             await OnTrackListUpdated?.Invoke(payload.Context, connection);
         }
 
@@ -99,12 +161,18 @@
             {
                 return;
             }
-            State = PlayerState.Playing;
             await connection.PlayAsync(_tracks.CurrentTrack);
-            await ctx.Channel.SendMessageAsync(
-                (_services.GetService(typeof(IEmbedService)) as IEmbedService)
-                .CreateNowPlayingEmbed(_tracks.CurrentTrack)
-                );
+            State = PlayerState.Playing;
+        }
+
+        private async Task PlayTrack(LavalinkTrack track, LavalinkGuildConnection connection)
+        {
+            if(State == PlayerState.Playing)
+            {
+                return;
+            }
+            await connection.PlayAsync(track);
+            State = PlayerState.Playing;
         }
 
         private async Task HandlePlayPayload(PlayPayload payload)
@@ -124,6 +192,85 @@
             var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
                 .GetGuildConnection(payload.Context, _services);
             await conn.ResumeAsync();
+        }
+
+        private async Task HandlePausePayload(PausePayload payload)
+        {
+            if(State == PlayerState.Paused || State == PlayerState.Stopped || State == PlayerState.None)
+            {
+                return;
+            }
+            else
+            {
+                var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
+                .GetGuildConnection(payload.Context, _services);
+                await conn.PauseAsync();
+                State = PlayerState.Paused;
+            }
+        }
+
+        private async Task HandleNextPayload(NextPayload payload)
+        {
+            if(State == PlayerState.Stopped)
+            {
+                return;
+            }
+            else
+            {
+                LavalinkTrack track;
+                lock (_tracks)
+                {
+                    track = _tracks.GetNextTrack();
+                }
+                if(track == null)
+                {
+                    return;
+                }
+                _shouldPlay.SetReason(Reason.NextTrack);
+                var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
+                .GetGuildConnection(payload.Context, _services);
+                await conn.PlayAsync(track);
+            }
+        }
+
+        private async Task HandleBackPayload(BackPayload payload)
+        {
+            if (State == PlayerState.Stopped)
+            {
+                return;
+            }
+            else
+            {
+                LavalinkTrack track;
+                lock (_tracks)
+                {
+                    track = _tracks.GetPreviousTrack();
+                }
+                if (track == null)
+                {
+                    return;
+                }
+                _shouldPlay.SetReason(Reason.PreviosTrack);
+                var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
+                .GetGuildConnection(payload.Context, _services);
+                await conn.PlayAsync(track);
+            }
+        }
+
+        private async Task HandleStopPayload(StopPayload payload)
+        {
+            if(State == PlayerState.Stopped)
+            {
+                return;
+            }
+            else
+            {
+                var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
+                .GetGuildConnection(payload.Context, _services);
+                await conn.StopAsync();
+                State = PlayerState.Stopped;
+                _tracks.Clear();
+            }
         }
     }
 }
