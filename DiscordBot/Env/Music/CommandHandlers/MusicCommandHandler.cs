@@ -78,7 +78,10 @@
         private async Task HandlePlayCommand(CommandContext ctx, Command cmd)
         {
             var query = cmd.Overloads?.First().Arguments?.First().DefaultValue as string;
-            await _player.AppendPayload(new QueryPayload(ctx, query));
+            if(query != null)
+            {
+                await _player.AppendPayload(new QueryPayload(ctx, query));
+            }
         }
     }
 }
