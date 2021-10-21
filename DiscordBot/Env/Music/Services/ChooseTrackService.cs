@@ -28,12 +28,12 @@
             var tracks = loadResult.Tracks.Take(options.Count).ToList();
             var embed = CreateEmbed(ctx, tracks);
             var msg = await ctx.Channel.SendMessageAsync(embed);
-            foreach(var emoji in options.Keys)
+            var reaction = await ctx.Client.GetInteractivity()
+                .WaitForReactionAsync(x => x.Message == msg, ctx.Member);
+            foreach (var emoji in options.Keys)
             {
                 await msg.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
             }
-            var reaction = await ctx.Client.GetInteractivity()
-                .WaitForReactionAsync(x => x.Message == msg, ctx.Member);
             await msg.DeleteAsync();
             if (reaction.TimedOut)
             {
@@ -41,6 +41,11 @@
             }
             else
             {
+                var emoji = reaction.Result.Emoji.GetDiscordName();
+                if (!options.Keys.Contains(emoji))
+                {
+                    return null;
+                }
                 return tracks[options[reaction.Result.Emoji.GetDiscordName()]];
             }
         }

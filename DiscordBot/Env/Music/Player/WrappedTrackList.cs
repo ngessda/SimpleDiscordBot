@@ -6,13 +6,13 @@
 
     public class TrackList
     {
-        private List<LavalinkTrack> tracks = new List<LavalinkTrack>();
+        private List<LavalinkTrackWrap> tracks = new List<LavalinkTrackWrap>();
 
         public int Position { get; private set; } = -1;
 
         public int Length => tracks.Count;
 
-        public LavalinkTrack CurrentTrack
+        public LavalinkTrackWrap CurrentTrackWrap
         {
             get
             {
@@ -24,7 +24,7 @@
             }
         }
 
-        public void Add(LavalinkTrack track)
+        public void Add(LavalinkTrackWrap track)
         {
             tracks.Add(track);
             if(Position == -1)
@@ -49,22 +49,22 @@
             tracks.Clear();
         }
 
-        public LavalinkTrack GetNextTrack()
+        public LavalinkTrackWrap GetNextTrackWrap()
         {
             if (HasNext())
             {
                 Position++;
-                return CurrentTrack;
+                return CurrentTrackWrap;
             }
             return null;
         }
 
-        public LavalinkTrack GetPreviousTrack()
+        public LavalinkTrackWrap GetPreviousTrackWrap()
         {
             if (HasPrevious())
             {
                 Position--;
-                return CurrentTrack;
+                return CurrentTrackWrap;
             }
             return null;
         }

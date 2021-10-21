@@ -6,7 +6,6 @@
     using DiscordBot.Env.Music.Player.Payloads.Enums;
     using DiscordBot.Env.Music.Services.Interfaces;
     using DSharpPlus.CommandsNext;
-    using DSharpPlus.Entities;
     using DSharpPlus.Lavalink;
     using System;
     using System.Collections.Generic;
@@ -19,7 +18,7 @@
         private event PayloadAction OnPayloadAppend;
         private event TrackListAction OnTrackListUpdated;
         private IServiceProvider _services;
-        private TrackList _tracks = new TrackList();
+        private WrappedTrackList _wrappedTracks = new WrappedTrackList();
         private Queue<Payload> _payloads = new Queue<Payload>();
         private ShouldPlay _shouldPlay = new ShouldPlay();
         public PlayerState State { get; private set; } = PlayerState.None;
@@ -85,29 +84,29 @@
 
         private void HandleConnectionEvents(CommandContext ctx, LavalinkGuildConnection connection)
         {
-            DiscordMessage msg;
             connection.PlaybackStarted += async (s, e) =>
             {
                 State = PlayerState.Playing;
-                msg = await ctx.Channel.SendMessageAsync(
+                var msg = await ctx.Channel.SendMessageAsync(
                 (_services.GetService(typeof(IEmbedService)) as IEmbedService)
-                .CreateNowPlayingEmbed(_tracks.CurrentTrack)
+                .CreateNowPlayingEmbed(_wrappedTracks.CurrentTrackWrap.Track)
                 );
-                // нужен сервис для обработки сообщений
+                _wrappedTracks.CurrentTrackWrap.AssociatedMessage = msg;
             };
             connection.PlaybackFinished += async (k, t) =>
             {
                 State = PlayerState.None;
+                await _wrappedTracks.CurrentTrackWrap.AssociatedMessage.DeleteAsync();
                 if (_shouldPlay.Result)
                 {
                     LavalinkTrack track;
-                    lock (_tracks)
+                    lock (_wrappedTracks)
                     {
-                        if (!_tracks.HasNext())
+                        if (!_wrappedTracks.HasNext())
                         {
                             return;
                         }
-                        track = _tracks.GetNextTrack();
+                        track = _wrappedTracks.GetNextTrackWrap().Track;
                     }
                     if (track == null)
                     {
@@ -145,9 +144,9 @@
                     );
                 return;
             }
-            lock (_tracks)
+            lock (_wrappedTracks)
             {
-                _tracks.Add(track);
+                _wrappedTracks.Add(new LavalinkTrackWrap(track));
             }
             await payload.Context.Channel.SendMessageAsync(
                 embed.CreateAddedInQueueEmbed(payload.Context, track)
@@ -161,7 +160,7 @@
             {
                 return;
             }
-            await connection.PlayAsync(_tracks.CurrentTrack);
+            await connection.PlayAsync(_wrappedTracks.CurrentTrackWrap.Track);
             State = PlayerState.Playing;
         }
 
@@ -218,9 +217,9 @@
             else
             {
                 LavalinkTrack track;
-                lock (_tracks)
+                lock (_wrappedTracks)
                 {
-                    track = _tracks.GetNextTrack();
+                    track = _wrappedTracks.GetNextTrackWrap().Track;
                 }
                 if(track == null)
                 {
@@ -242,9 +241,9 @@
             else
             {
                 LavalinkTrack track;
-                lock (_tracks)
+                lock (_wrappedTracks)
                 {
-                    track = _tracks.GetPreviousTrack();
+                    track = _wrappedTracks.GetPreviousTrackWrap().Track;
                 }
                 if (track == null)
                 {
@@ -269,7 +268,7 @@
                 .GetGuildConnection(payload.Context, _services);
                 await conn.StopAsync();
                 State = PlayerState.Stopped;
-                _tracks.Clear();
+                _wrappedTracks.Clear();
             }
         }
     }
