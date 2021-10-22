@@ -35,9 +35,6 @@
                 {
                     return;
                 }
-
-                if(type == CommandType.Join)
-
                 if(type == CommandType.Join)
                 {
                     await HandleJoinCommand(ctx);
