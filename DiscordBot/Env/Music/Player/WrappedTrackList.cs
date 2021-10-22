@@ -1,18 +1,16 @@
 ﻿namespace DiscordBot.Env.Music.Player
 {
-    using DSharpPlus.Lavalink;
-    using System;
     using System.Collections.Generic;
 
-    public class TrackList
+    public class WrappedTrackList
     {
-        private List<LavalinkTrackWrap> tracks = new List<LavalinkTrackWrap>();
+        private List<LavalinkWrappedTrack> tracks = new List<LavalinkWrappedTrack>();
 
         public int Position { get; private set; } = -1;
 
         public int Length => tracks.Count;
 
-        public LavalinkTrackWrap CurrentTrackWrap
+        public LavalinkWrappedTrack CurrentTrackWrap
         {
             get
             {
@@ -24,7 +22,7 @@
             }
         }
 
-        public void Add(LavalinkTrackWrap track)
+        public void Add(LavalinkWrappedTrack track)
         {
             tracks.Add(track);
             if(Position == -1)
@@ -49,7 +47,7 @@
             tracks.Clear();
         }
 
-        public LavalinkTrackWrap GetNextTrackWrap()
+        public LavalinkWrappedTrack GetNextTrackWrap()
         {
             if (HasNext())
             {
@@ -59,7 +57,7 @@
             return null;
         }
 
-        public LavalinkTrackWrap GetPreviousTrackWrap()
+        public LavalinkWrappedTrack GetPreviousTrackWrap()
         {
             if (HasPrevious())
             {

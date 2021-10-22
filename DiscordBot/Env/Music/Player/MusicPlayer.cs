@@ -146,7 +146,7 @@
             }
             lock (_wrappedTracks)
             {
-                _wrappedTracks.Add(new LavalinkTrackWrap(track));
+                _wrappedTracks.Add(new LavalinkWrappedTrack(track));
             }
             await payload.Context.Channel.SendMessageAsync(
                 embed.CreateAddedInQueueEmbed(payload.Context, track)
