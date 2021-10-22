@@ -2,15 +2,15 @@
 {
     using System.Collections.Generic;
 
-    public class WrappedTrackList
+    public class TrackList
     {
-        private List<LavalinkWrappedTrack> tracks = new List<LavalinkWrappedTrack>();
+        private List<LavalinkTrack> tracks = new List<LavalinkTrack>();
 
         public int Position { get; private set; } = -1;
 
         public int Length => tracks.Count;
 
-        public LavalinkWrappedTrack CurrentTrackWrap
+        public LavalinkTrack CurrentTrack
         {
             get
             {
@@ -22,7 +22,7 @@
             }
         }
 
-        public void Add(LavalinkWrappedTrack track)
+        public void Add(LavalinkTrack track)
         {
             tracks.Add(track);
             if(Position == -1)
@@ -47,22 +47,22 @@
             tracks.Clear();
         }
 
-        public LavalinkWrappedTrack GetNextTrackWrap()
+        public LavalinkTrack GetNextTrack()
         {
             if (HasNext())
             {
                 Position++;
-                return CurrentTrackWrap;
+                return CurrentTrack;
             }
             return null;
         }
 
-        public LavalinkWrappedTrack GetPreviousTrackWrap()
+        public LavalinkTrack GetPreviousTrack()
         {
             if (HasPrevious())
             {
                 Position--;
-                return CurrentTrackWrap;
+                return CurrentTrack;
             }
             return null;
         }

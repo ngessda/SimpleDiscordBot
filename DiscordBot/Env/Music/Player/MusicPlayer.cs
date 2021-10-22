@@ -18,7 +18,7 @@
         private event PayloadAction OnPayloadAppend;
         private event TrackListAction OnTrackListUpdated;
         private IServiceProvider _services;
-        private WrappedTrackList _wrappedTracks = new WrappedTrackList();
+        private TrackList _tracks = new TrackList();
         private Queue<Payload> _payloads = new Queue<Payload>();
         private ShouldPlay _shouldPlay = new ShouldPlay();
         public PlayerState State { get; private set; } = PlayerState.None;
@@ -89,24 +89,22 @@
                 State = PlayerState.Playing;
                 var msg = await ctx.Channel.SendMessageAsync(
                 (_services.GetService(typeof(IEmbedService)) as IEmbedService)
-                .CreateNowPlayingEmbed(_wrappedTracks.CurrentTrackWrap.Track)
+                .CreateNowPlayingEmbed(_tracks.CurrentTrack)
                 );
-                _wrappedTracks.CurrentTrackWrap.AssociatedMessage = msg;
             };
             connection.PlaybackFinished += async (k, t) =>
             {
                 State = PlayerState.None;
-                await _wrappedTracks.CurrentTrackWrap.AssociatedMessage.DeleteAsync();
                 if (_shouldPlay.Result)
                 {
                     LavalinkTrack track;
-                    lock (_wrappedTracks)
+                    lock (_tracks)
                     {
-                        if (!_wrappedTracks.HasNext())
+                        if (!_tracks.HasNext())
                         {
                             return;
                         }
-                        track = _wrappedTracks.GetNextTrackWrap().Track;
+                        track = _tracks.GetNextTrack();
                     }
                     if (track == null)
                     {
@@ -144,9 +142,9 @@
                     );
                 return;
             }
-            lock (_wrappedTracks)
+            lock (_tracks)
             {
-                _wrappedTracks.Add(new LavalinkWrappedTrack(track));
+                _tracks.Add(track);
             }
             await payload.Context.Channel.SendMessageAsync(
                 embed.CreateAddedInQueueEmbed(payload.Context, track)
@@ -160,7 +158,7 @@
             {
                 return;
             }
-            await connection.PlayAsync(_wrappedTracks.CurrentTrackWrap.Track);
+            await connection.PlayAsync(_tracks.CurrentTrack);
             State = PlayerState.Playing;
         }
 
@@ -217,9 +215,9 @@
             else
             {
                 LavalinkTrack track;
-                lock (_wrappedTracks)
+                lock (_tracks)
                 {
-                    track = _wrappedTracks.GetNextTrackWrap().Track;
+                    track = _tracks.GetNextTrack();
                 }
                 if(track == null)
                 {
@@ -240,10 +238,10 @@
             }
             else
             {
-                LavalinkTrack track;
-                lock (_wrappedTracks)
+                DSharpPlus.Lavalink.LavalinkTrack track;
+                lock (_tracks)
                 {
-                    track = _wrappedTracks.GetPreviousTrackWrap().Track;
+                    track = _tracks.GetPreviousTrack();
                 }
                 if (track == null)
                 {
@@ -268,7 +266,7 @@
                 .GetGuildConnection(payload.Context, _services);
                 await conn.StopAsync();
                 State = PlayerState.Stopped;
-                _wrappedTracks.Clear();
+                _tracks.Clear();
             }
         }
     }
