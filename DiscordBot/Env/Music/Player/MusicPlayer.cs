@@ -107,7 +107,7 @@
                         {
                             return;
                         }
-                        track = _wrappedTracks.GetNextTrackWrap().Track;
+                        track = _wrappedTracks.GetNextTrackWrap()?.Track;
                     }
                     if (track == null)
                     {
@@ -217,18 +217,19 @@
             }
             else
             {
+                var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
+                .GetGuildConnection(payload.Context, _services);
+                await conn.StopAsync();
                 LavalinkTrack track;
                 lock (_wrappedTracks)
                 {
-                    track = _wrappedTracks.GetNextTrackWrap().Track;
+                    track = _wrappedTracks.GetNextTrackWrap()?.Track;
                 }
                 if(track == null)
                 {
                     return;
                 }
                 _shouldPlay.SetReason(Reason.NextTrack);
-                var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
-                .GetGuildConnection(payload.Context, _services);
                 await conn.PlayAsync(track);
             }
         }
@@ -241,18 +242,19 @@
             }
             else
             {
+                var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
+                   .GetGuildConnection(payload.Context, _services);
+                await conn.StopAsync();
                 LavalinkTrack track;
                 lock (_wrappedTracks)
                 {
-                    track = _wrappedTracks.GetPreviousTrackWrap().Track;
+                    track = _wrappedTracks.GetPreviousTrackWrap()?.Track;
                 }
                 if (track == null)
                 {
                     return;
                 }
                 _shouldPlay.SetReason(Reason.PreviosTrack);
-                var conn = await (_services.GetService(typeof(IVoiceConnectService)) as IVoiceConnectService)
-                .GetGuildConnection(payload.Context, _services);
                 await conn.PlayAsync(track);
             }
         }
