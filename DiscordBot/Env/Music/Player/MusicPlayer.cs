@@ -91,12 +91,13 @@
                 (_services.GetService(typeof(IEmbedService)) as IEmbedService)
                 .CreateNowPlayingEmbed(_wrappedTracks.CurrentTrackWrap.Track)
                 );
-                _wrappedTracks.CurrentTrackWrap.AssociatedMessage = msg;
+                _wrappedTracks.CurrentTrackWrap.AssociatedMessageId = msg.Id;
             };
             connection.PlaybackFinished += async (k, t) =>
             {
                 State = PlayerState.None;
-                await _wrappedTracks.CurrentTrackWrap.AssociatedMessage.DeleteAsync();
+                var msg = await ctx.Channel.GetMessageAsync(_wrappedTracks.CurrentTrackWrap.AssociatedMessageId);
+                await msg.DeleteAsync();
                 if (_shouldPlay.Result)
                 {
                     LavalinkTrack track;
