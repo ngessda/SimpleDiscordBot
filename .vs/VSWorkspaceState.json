@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\DiscordBot",
+    "\\DiscordBot\\Utils",
+    "\\DiscordBot\\Utils\\Involving",
+    "\\DiscordBot\\Utils\\Involving\\Interfaces"
+  ],
+  "SelectedNode": "\\DiscordBot\\Utils\\Involving\\Interfaces\\IExtension.cs",
+  "PreviewInSolutionExplorer": false
+}

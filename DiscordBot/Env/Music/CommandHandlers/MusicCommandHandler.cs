@@ -5,20 +5,19 @@
     using DiscordBot.Env.Music.Player;
     using DiscordBot.Env.Music.Player.Payloads;
     using DiscordBot.Env.Music.Services.Interfaces;
+    using DiscordBot.Utils;
     using DSharpPlus.CommandsNext;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
-    public class MusicCommandHandler
+    public class MusicCommandHandler : CommandHandler
     {
-        private IServiceProvider _services;
         private MusicPlayer _player;
 
-        public MusicCommandHandler(CommandsNextExtension commands)
+        public MusicCommandHandler(CommandsNextExtension commands) : base(commands)
         {
-            _services = commands.Services;
             _player = new MusicPlayer(_services);
             HandleCommands(commands);
         }
